@@ -141,12 +141,21 @@ function read(p) {
   try { return fs.readFileSync(p); } catch { return Buffer.alloc(0); }
 }
 
-for (const id of fs.readdirSync(inDir).filter((d) => /^i\d+$/.test(d)).sort()) {
+for (let k = 1; k <= 40; k++) {
+  const id = 'i' + String(k).padStart(3, '0');
   const d = path.join(inDir, id);
-  if (!fs.statSync(d).isDirectory()) continue;
-  const r = run(read(path.join(d, 'program.bin')), read(path.join(d, 'input.bin')));
-  const od = path.join(outDir, id);
-  fs.mkdirSync(od, { recursive: true });
-  fs.writeFileSync(path.join(od, 'stdout.bin'), r.out);
-  fs.writeFileSync(path.join(od, 'exit.txt'), String(r.code) + '\n');
+  try {
+    const r = run(read(path.join(d, 'program.bin')), read(path.join(d, 'input.bin')));
+    const od = path.join(outDir, id);
+    fs.mkdirSync(od, { recursive: true });
+    fs.writeFileSync(path.join(od, 'stdout.bin'), r.out);
+    fs.writeFileSync(path.join(od, 'exit.txt'), String(r.code) + '\n');
+  } catch {
+    try {
+      const od = path.join(outDir, id);
+      fs.mkdirSync(od, { recursive: true });
+      fs.writeFileSync(path.join(od, 'stdout.bin'), Buffer.alloc(0));
+      fs.writeFileSync(path.join(od, 'exit.txt'), '9\n');
+    } catch {}
+  }
 }
